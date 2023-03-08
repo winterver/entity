@@ -672,7 +672,6 @@ void assign()
         ERROR("(%d) assignment on different types\n", lineno);
     }
     *left = right;
-    match(';');
 }
 
 value block()
@@ -687,7 +686,12 @@ value block()
         state s;
         save(&s);
 
-        if (token == TYPE)
+        // empty statement
+        if (token == ';')
+        {
+            match(';');
+        }
+        else if (token == TYPE)
         {
             var();
         }
@@ -704,6 +708,7 @@ value block()
             {
                 restore(&s);
                 assign();
+                match(';');
             }
         }
         else if (token == RETURN)
