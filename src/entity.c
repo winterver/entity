@@ -11,9 +11,6 @@
 
 #define MAX_NAME_LEN 64
 
-int lineno = 1;
-char *src;
-
 // tokens
 enum {
     TYPE = 128, ID, NUM, STR,
@@ -21,6 +18,8 @@ enum {
     EQU, NEQ, LE, GE, OR, AND,
 };
 
+int lineno = 1;
+char *src;
 int token;
 typedef union semantics {
     int type;
@@ -30,8 +29,10 @@ typedef union semantics {
 } semantics;
 semantics token_val;
 
-// forward declaration. it is in value.c
-static int get_type(const char* s);
+// forward declaration. in value.c
+int get_type(const char* s);
+// pool_add() is below next()
+char* pool_add(char* s);
 
 void next() {
     char* last_pos;
@@ -79,7 +80,7 @@ void next() {
             }
 
             token = ID;
-            token_val.string = strdup(buf);
+            token_val.string = pool_add(buf);//strdup(buf);
             return;
         }
         else if (token >= '0' && token <= '9') {        // process numbers
@@ -108,7 +109,7 @@ void next() {
             }
             if (*src) {
                 *src = 0;
-                token_val.string = strdup(last_pos);
+                token_val.string = pool_add(last_pos);//strdup(last_pos);
                 *src = '"';
                 src++;
             }
@@ -193,6 +194,8 @@ void match(int tk) {
     }
 }
 
+// lexer state management
+
 typedef struct state
 {
     char* old_src;
@@ -215,6 +218,63 @@ void restore(const state* s)
     token = s->old_token;
     token_val = s->old_token_val;
     lineno = s->old_lineno;
+}
+
+// string pool
+
+typedef struct pool_node
+{
+    struct pool_node* next;
+    char* string;
+} pool_node;
+
+pool_node* pool_beg = NULL;
+pool_node* pool_end = NULL;
+
+char* _find_string(pool_node* n, char* s)
+{
+    if (n == NULL)
+    {
+        return NULL;
+    }
+
+    if (!strcmp(n->string, s))
+    {
+        return n->string;
+    }
+
+    return _find_string(n->next, s);
+}
+
+char* find_string(char* s)
+{
+    return _find_string(pool_beg, s);
+}
+
+char* pool_add(char* s)
+{
+    if (pool_end == NULL)
+    {
+        pool_node* n = malloc(sizeof(pool_node));
+        n->next = NULL;
+        n->string = strdup(s);
+        pool_beg = n;
+        pool_end = n;
+        return n->string;
+    }
+
+    char* f = find_string(s);
+    if (f != NULL)
+    {
+        return f;
+    }
+
+    pool_node* n = malloc(sizeof(pool_node));
+    n->next = NULL;
+    n->string = strdup(s);
+    pool_end->next = n;
+    pool_end = n;
+    return n->string;
 }
 
 /*************************
@@ -258,7 +318,7 @@ void free_variable(variable* v)
     if (v == NULL)
         return;
     free_variable(v->next);
-    free(v->name);
+    //free(v->name);
     free(v);
 }
 
@@ -279,7 +339,8 @@ value* _find_variable(variable* v, const char* name)
 {
     if (v == NULL)
         return NULL;
-    if (!strcmp(v->name, name))
+    //if (!strcmp(v->name, name))
+    if (v->name == name)
         return &v->val;
     return _find_variable(v->next, name);
 }
@@ -312,7 +373,7 @@ void new_variable(char* name, value val)
         // initialize it
         variable* var = malloc(sizeof(variable));
         var->next = NULL;
-        var->name = strdup(name);
+        var->name = name;//strdup(name);
         var->val = val;
         scope_end->beg = var;
         scope_end->end = var;
@@ -322,7 +383,7 @@ void new_variable(char* name, value val)
     // append to end of list
     variable* var = malloc(sizeof(variable));
     var->next = NULL;
-    var->name = strdup(name);
+    var->name = name;//strdup(name);
     var->val = val;
     scope_end->end->next = var;
     scope_end->end = var;
@@ -371,7 +432,8 @@ function* _find_function(function* fun, const char* name)
     if (fun == NULL)
         return NULL;
 
-    if (!strcmp(fun->name, name))
+    //if (!strcmp(fun->name, name))
+    if (fun->name == name)
         return fun;
 
     return _find_function(fun->next, name);
@@ -411,7 +473,7 @@ void new_function(
         function* fun = malloc(sizeof(function));
         fun->next = NULL;
         fun->type = type;
-        fun->name = strdup(name);
+        fun->name = name;//strdup(name);
         fun->params = params;
         fun->stat = stat;
         fun->fp = fp;
@@ -423,7 +485,7 @@ void new_function(
     function* fun = malloc(sizeof(function));
     fun->next = NULL;
     fun->type = type;
-    fun->name = strdup(name);
+    fun->name = name;//strdup(name);
     fun->params = params;
     fun->stat = stat;
     fun->fp = fp;
@@ -548,7 +610,7 @@ value* reference()
     char* name = token_val.string;
     match(ID);
     value* ref = get_variable(name);
-    free(name);
+    //free(name);
 
     /*
     while(token == '.')
@@ -650,7 +712,7 @@ value call()
     // see begining of call()
     retflag = 0;
 
-    free(name);
+    //free(name);
     return ret;
 }
 
@@ -807,7 +869,7 @@ NextVar:
         val.type = type;
         new_variable(name, val);
     }
-    free(name);
+    //free(name);
 
     if (token == ',')
     {
@@ -854,7 +916,7 @@ void func()
         param* p = malloc(sizeof(param));
         p->next = NULL;
         p->type = param_type;
-        p->name = strdup(param_name);
+        p->name = param_name;//strdup(param_name);
         
         if (params_end == NULL)
         {
@@ -866,7 +928,7 @@ void func()
             params_end->next = p;
             params_end = p;
         }
-        free(param_name);
+        //free(param_name);
 
         if (token == ',')
         {
@@ -888,7 +950,7 @@ void func()
         stat,
         NULL
     );
-    free(name);
+    //free(name);
 }
 
 void program()
@@ -951,7 +1013,8 @@ int main(int argc, char* argv[])
     program();
 
     value result;
-    function* entry = find_function("main");
+    char* str = find_string("main");
+    function* entry = find_function(str);
 
     if (entry != NULL) {
         new_scope();

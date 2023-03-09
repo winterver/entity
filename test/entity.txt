@@ -6,15 +6,6 @@ int fib(int n) {
     return fib(n-1)+fib(n-2);
 }
 
-int max(int a, int b)
-{
-    if (a > b)
-    {
-        return a;
-    }
-    return b;
-}
-
 int main() {
-    return fib(13);
+    return fib(35);
 }

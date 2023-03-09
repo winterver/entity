@@ -24,7 +24,7 @@ enum {
     TYPE_FLOAT, TYPE_DOUBLE, TYPE_STRING, TYPE_ENTITY,
 };
 
-static const char* type_name(int type)
+const char* type_name(int type)
 {
     switch(type)
     {
@@ -45,7 +45,7 @@ static const char* type_name(int type)
     }
 }
 
-static int get_type(const char* s)
+int get_type(const char* s)
 {
 #define CMP(type, str)  \
     if (!strcmp(str, s)) return type;
