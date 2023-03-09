@@ -20,6 +20,7 @@ extern int token;
 extern int lineno;
 extern semantics token_val;
 
+void init_lex();
 void next();
 void match(int tk);
 
@@ -27,7 +28,6 @@ typedef struct token_struct token_struct;
 
 token_struct* save();
 void restore(token_struct* s);
-
 
 // string pool
 char* find_string(char* s);

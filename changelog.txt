@@ -6,3 +6,5 @@ revision 5 Release Build fib(35) test: 14.7s
 revision 6 Release Build fib(35) test: 4.9s !!
     revision 6 has a newly added token stream
     it got astonishing speed up!
+revision 7 Release Build fib(35) test: 4.7s
+    optimized some code.

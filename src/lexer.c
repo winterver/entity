@@ -177,41 +177,41 @@ token_struct* stream_beg = NULL;
 token_struct* stream_end = NULL;
 token_struct* stream_cur = NULL;
 
+void init_lex()
+{
+    // scan all tokens and store them
+    do
+    {
+        lex();
+
+        token_struct* t = malloc(sizeof(token_struct));
+        t->next = NULL;
+        t->token = token;
+        t->lineno = lineno;
+        t->token_val = token_val;
+
+        if (stream_end == NULL)
+        {
+            stream_beg = t;
+            stream_end = t;
+        }
+        else
+        {
+            stream_end->next = t;
+            stream_end = t;
+        }
+    } while (token);
+
+    // load the first token
+    stream_cur = stream_beg;
+    token = stream_cur->token;
+    lineno = stream_cur->lineno;
+    token_val = stream_cur->token_val;
+}
+
 void next()
 {
-    // initialize on first call
-    if (stream_end == NULL)
-    {
-        // scan all tokens and store them
-        do
-        {
-            lex();
-
-            token_struct* t = malloc(sizeof(token_struct));
-            t->next = NULL;
-            t->token = token;
-            t->lineno = lineno;
-            t->token_val = token_val;
-
-            if (stream_end == NULL)
-            {
-                stream_beg = t;
-                stream_end = t;
-            }
-            else
-            {
-                stream_end->next = t;
-                stream_end = t;
-            }
-        } while (token);
-    }
-
-    if (stream_cur == NULL)
-    {
-        // set current token to the first token
-        stream_cur = stream_beg;
-    }
-    else if (stream_cur != stream_end)
+    if (stream_cur != stream_end)
     {
         // go to next token, if it's not end
         stream_cur = stream_cur->next;

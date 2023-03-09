@@ -95,26 +95,23 @@ void new_variable(char* name, value val)
         ERROR("(%d) redefinition of variable %s\n", lineno, name);
     }
 
-    // if it is an uninitialized list
-    if (scope_end->end == NULL)
-    {
-        // initialize it
-        variable* var = malloc(sizeof(variable));
-        var->next = NULL;
-        var->name = name;
-        var->val = val;
-        scope_end->beg = var;
-        scope_end->end = var;
-        return;
-    }
-
-    // append to end of list
     variable* var = malloc(sizeof(variable));
     var->next = NULL;
     var->name = name;
     var->val = val;
-    scope_end->end->next = var;
-    scope_end->end = var;
+
+    // if it is an uninitialized list
+    if (scope_end->end == NULL)
+    {
+        // initialize it
+        scope_end->beg = var;
+        scope_end->end = var;
+    }
+    else
+    {
+        scope_end->end->next = var;
+        scope_end->end = var;
+    }
 }
 
 // search variable with the given name
@@ -194,20 +191,6 @@ void new_function(
         ERROR("(%d) redefinition of function %s\n", lineno, name);
     }
 
-    if (funcs_end == NULL)
-    {
-        function* fun = malloc(sizeof(function));
-        fun->next = NULL;
-        fun->type = type;
-        fun->name = name;
-        fun->params = params;
-        fun->stat = stat;
-        fun->fp = fp;
-        funcs_beg = fun;
-        funcs_end = fun;
-        return;
-    }
-
     function* fun = malloc(sizeof(function));
     fun->next = NULL;
     fun->type = type;
@@ -215,8 +198,17 @@ void new_function(
     fun->params = params;
     fun->stat = stat;
     fun->fp = fp;
-    funcs_end->next = fun;
-    funcs_end = fun;
+
+    if (funcs_end == NULL)
+    {
+        funcs_beg = fun;
+        funcs_end = fun;
+    }
+    else
+    {
+        funcs_end->next = fun;
+        funcs_end = fun;
+    }
 }
 
 /*************************
@@ -671,7 +663,8 @@ void func()
 void program()
 {
     new_scope();
-    next();
+    //next();
+    init_lex();
 
     token_struct* cur;
 
