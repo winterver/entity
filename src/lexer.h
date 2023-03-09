@@ -15,24 +15,19 @@ typedef union semantics {
     long long integer;
 } semantics;
 
-extern int lineno;
 extern char *src;
 extern int token;
+extern int lineno;
 extern semantics token_val;
 
 void next();
 void match(int tk);
 
-typedef struct state
-{
-    char* old_src;
-    int old_token;
-    semantics old_token_val;
-    int old_lineno;
-} state;
+typedef struct token_struct token_struct;
 
-void save(state* s);
-void restore(const state* s);
+token_struct* save();
+void restore(token_struct* s);
+
 
 // string pool
 char* find_string(char* s);

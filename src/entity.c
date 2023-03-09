@@ -144,7 +144,8 @@ typedef struct function
     char* name;
     param* params; // when appending native functions, you need to
                     // construct this by yourself.
-    state stat; // token = '{', the start of the function body
+    //state stat; // token = '{', the start of the function body
+    token_struct* stat;
     value (*fp)(); // function pointer to native function
                     // NULL by default. if not NULL, the native
                     // function will be called, and stat is ignored.
@@ -183,7 +184,7 @@ void new_function(
     int type, 
     char* name, 
     param* params, 
-    state stat,
+    token_struct* stat,
     value (*fp)()
 )
 {
@@ -262,16 +263,15 @@ value factor() {
         match(NUM);
     }
     else if (token == ID) {
-        state s;
-        save(&s);
+        token_struct* cur = save();
 
         match(ID);
         if (token == '(') {
-            restore(&s);
+            restore(cur);
             out = call();
         }
         else {
-            restore(&s);
+            restore(cur);
             out = *reference();
         }
     }
@@ -414,13 +414,12 @@ value call()
     }
 
     // save return address
-    state s;
-    save(&s);
+    token_struct* cur = save();
 
     // 传参结束，scope_end=neo,新scope挂到scope_beg下。
     scope_end->parent = scope_beg;
     // finally, call it!
-    restore(&fun->stat);
+    restore(fun->stat);
     ret = block();
 
     if (ret.type != fun->type)
@@ -428,7 +427,7 @@ value call()
         ERROR("(%d) function %s returns wrong type\n", lineno, name);
     }
 
-    restore(&s);
+    restore(cur);
 
     exit_scope();
     scope_end = bak;
@@ -468,8 +467,7 @@ value block()
     match('{');
     while(token != '}')
     {
-        state s;
-        save(&s);
+        token_struct* cur = save();
 
         // empty statement
         if (token == ';')
@@ -485,13 +483,13 @@ value block()
             match(ID);
             if (token == '(')
             {
-                restore(&s);
+                restore(cur);
                 call();
                 match(';');
             }
             else
             {
-                restore(&s);
+                restore(cur);
                 assign();
                 match(';');
             }
@@ -657,8 +655,7 @@ void func()
     }
     match(')');
 
-    state stat;
-    save(&stat);
+    token_struct* cur = save();
 
     skip_block();
 
@@ -666,7 +663,7 @@ void func()
         type,
         name,
         params_beg,
-        stat,
+        cur,
         NULL
     );
 }
@@ -676,13 +673,12 @@ void program()
     new_scope();
     next();
 
-    state s;
+    token_struct* cur;
 
     // process global variables
     while(token)
     {
-        // save lexer state
-        save(&s);
+        cur = save();
         match(TYPE);
         match(ID);
 
@@ -690,12 +686,11 @@ void program()
             || token == ',' 
             || token == ';')
         {
-            // restore lexer state
-            restore(&s);
+            restore(cur);
             var();
         }
         else {
-            restore(&s);
+            restore(cur);
             break;
         }
     }
@@ -736,7 +731,7 @@ int main(int argc, char* argv[])
 
     if (entry != NULL) {
         new_scope();
-        restore(&entry->stat);
+        restore(entry->stat);
         result = block();
         exit_scope();
     }

@@ -1,5 +1,8 @@
 2023/3/9th
-revision 3 Release Build fib(35) test: 16.1s
-revision 4 Release Build fib(35) test: 14.7s
-    revision 4 has a newly added string pool
+revision 4 Release Build fib(35) test: 16.1s
+revision 5 Release Build fib(35) test: 14.7s
+    revision 5 has a newly added string pool
     it gains some speed up.
+revision 6 Release Build fib(35) test: 4.9s !!
+    revision 6 has a newly added token stream
+    it got astonishing speed up!

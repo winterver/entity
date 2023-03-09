@@ -4,7 +4,7 @@
   - [ ] for & while statement
   - [ ] break & continue
 - [x] string pool, so strings can be compared directly using ==, no need to strdup/free over and over again.
-- [ ] token stream, no need to parse src over and over again.
+- [x] token stream, no need to parse src over and over again.
 - [ ] rewrite in c++. use reflex as lexer.
 - [ ] assembly, bytecode, virtual machine.
 - [ ] jit

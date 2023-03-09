@@ -5,9 +5,9 @@
 #define MAX_NAME_LEN 64
 #define ERROR(...) do { printf(__VA_ARGS__); exit(-1); } while(0);
 
-int lineno = 1;
 char *src;
 int token;
+int lineno = 1;
 semantics token_val;
 
 // in value.c
@@ -15,7 +15,7 @@ int get_type(const char* s);
 // forward declaration
 char* pool_add(char* s);
 
-void next() {
+void lex() {
     char* last_pos;
 
     while ((token = *src)) {
@@ -165,6 +165,63 @@ void next() {
     }
 }
 
+typedef struct token_struct
+{
+    struct token_struct* next;
+    int token;
+    int lineno;
+    semantics token_val;
+} token_struct;
+
+token_struct* stream_beg = NULL;
+token_struct* stream_end = NULL;
+token_struct* stream_cur = NULL;
+
+void next()
+{
+    // initialize on first call
+    if (stream_end == NULL)
+    {
+        // scan all tokens and store them
+        do
+        {
+            lex();
+
+            token_struct* t = malloc(sizeof(token_struct));
+            t->next = NULL;
+            t->token = token;
+            t->lineno = lineno;
+            t->token_val = token_val;
+
+            if (stream_end == NULL)
+            {
+                stream_beg = t;
+                stream_end = t;
+            }
+            else
+            {
+                stream_end->next = t;
+                stream_end = t;
+            }
+        } while (token);
+    }
+
+    if (stream_cur == NULL)
+    {
+        // set current token to the first token
+        stream_cur = stream_beg;
+    }
+    else if (stream_cur != stream_end)
+    {
+        // go to next token, if it's not end
+        stream_cur = stream_cur->next;
+    }
+
+    token = stream_cur->token;
+    lineno = stream_cur->lineno;
+    token_val = stream_cur->token_val;
+}
+
 void match(int tk) {
     if (token == tk) {
         next();
@@ -177,20 +234,17 @@ void match(int tk) {
 
 // lexer state management
 
-void save(state* s)
+token_struct* save()
 {
-    s->old_src = src;
-    s->old_token = token;
-    s->old_token_val = token_val;
-    s->old_lineno = lineno;
+    return stream_cur;
 }
 
-void restore(const state* s)
+void restore(token_struct* s)
 {
-    src = s->old_src;
-    token = s->old_token;
-    token_val = s->old_token_val;
-    lineno = s->old_lineno;
+    stream_cur = s;
+    token = s->token;
+    token_val = s->token_val;
+    lineno = s->lineno;
 }
 
 // string pool
