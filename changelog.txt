@@ -13,3 +13,4 @@ revision 7 Release Build fib(35) test: 4.7s
 revision 8 support while & do-while statement.
 revision 9 support continue & break statement.
 revision 10 entity object & member attachment.
+revision 11 more arithmetics & print().

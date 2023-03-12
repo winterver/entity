@@ -3,7 +3,7 @@
 
 // tokens
 enum {
-    TYPE = 128, ID, NUM, STR,
+    TYPE = 128, ID, NUM, FLT, CHR, STR,
     IF, ELSE, WHILE, DO, FOR, CONTINUE, BREAK, RETURN,
     EQU, NEQ, LE, GE, OR, AND,
 };

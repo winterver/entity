@@ -255,6 +255,21 @@ value factor() {
         out.i32 = token_val.integer;
         match(NUM);
     }
+    else if(token == FLT) {
+        out.type = TYPE_FLOAT;
+        out.f32 = token_val.floating;
+        match(FLT);
+    }
+    else if(token == CHR) {
+        out.type = TYPE_CHAR;
+        out.i8 = token_val.integer;
+        match(CHR);
+    }
+    else if(token == STR) {
+        out.type = TYPE_STRING;
+        out.str = token_val.string;
+        match(STR);
+    }
     else if (token == ID) {
         token_struct* cur = save();
 
@@ -268,21 +283,29 @@ value factor() {
             out = *reference();
         }
     }
+    else {
+        ERROR("(%d) unexpected token: %d\n", lineno, token);
+    }
     return out;
 }
 
 value term2() {
     value lhs = factor(), rhs;
-    while (token == '*' || token == '/') {
+    while (token == '*' || token == '/' || token == '%') {
         if (token == '*') {
             match('*');
             rhs = factor();
             binary_op(&lhs, &lhs, '*', &rhs);
         }
-        else {
+        else if (token == '/') {
             match('/');
             rhs = factor();
             binary_op(&lhs, &lhs, '/', &rhs);
+        }
+        else {
+            match('%');
+            rhs = factor();
+            binary_op(&lhs, &lhs, '%', &rhs);
         }
     }
     return lhs;
@@ -878,19 +901,20 @@ int main(int argc, char* argv[])
     memset(src, 0, len+1);
     fread(src, 1, len, f);
 
-    // add native function names to string pool in advance
-    pool_add("new");
-    pool_add("del");
-
     // register native function(s)
-    new_function(TYPE_ENTITY, find_string("new"), NULL, NULL, &new_entity);
+    new_function(TYPE_ENTITY, pool_add("new"), NULL, NULL, &new_entity);
     
     param* p = malloc(sizeof(param));
     p->next = NULL;
-    pool_add("e");
-    p->name = find_string("e");
+    p->name = pool_add("e");
     p->type = TYPE_ENTITY;
-    new_function(TYPE_VOID, find_string("del"), p, NULL, &del_entity);
+    new_function(TYPE_VOID, pool_add("del"), p, NULL, &del_entity);
+
+    param* p2 = malloc(sizeof(param));
+    p2->next = NULL;
+    p2->name = pool_add("s");
+    p2->type = TYPE_STRING;
+    new_function(TYPE_VOID, pool_add("print"), p2, NULL, &print_str);
 
     // parse
     program();
@@ -909,7 +933,7 @@ int main(int argc, char* argv[])
         ERROR("main() not found\n");
     }
 
-    printf("%d\n", result.i32);
+    printf("%f\n", result.f32);
 
     free(orig);
     return 0;

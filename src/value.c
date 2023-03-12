@@ -85,46 +85,168 @@ int get_type(const char* s)
 #define MATCH_OP(ltype, _op, rtype)                                     \
     if (lhs->type == ltype                                              \
         && rhs->type == rtype                                           \
-        && op == #_op[0])
+        && op == _op)
 
-#define IMPL_OP(ltype, _op, rtype, otype, ofield, lfield, rfield)       \
+#define IMPL_OP(ltype, _op, rtype, otype, ofield, lfield, _op2, rfield) \
     MATCH_OP(ltype, _op, rtype)                                         \
     {                                                                   \
         out->type = otype;                                              \
-        out->ofield = lhs->lfield _op rhs->rfield;                      \
+        out->ofield = lhs->lfield _op2 rhs->rfield;                     \
         return;                                                         \
     }
 
+double fmod(double, double);
+
 void binary_op(value* out, const value* lhs, int op, const value* rhs)
 {
+    // operators between 2 ints
     IMPL_OP(
-        TYPE_INT, +, TYPE_INT,
-        TYPE_INT, i32, i32, i32
+        TYPE_INT, '+', TYPE_INT,
+        TYPE_INT, i32, i32, +, i32
     );
 
     IMPL_OP(
-        TYPE_INT, -, TYPE_INT,
-        TYPE_INT, i32, i32, i32
+        TYPE_INT, '-', TYPE_INT,
+        TYPE_INT, i32, i32, -, i32
     );
 
     IMPL_OP(
-        TYPE_INT, *, TYPE_INT,
-        TYPE_INT, i32, i32, i32
+        TYPE_INT, '*', TYPE_INT,
+        TYPE_INT, i32, i32, *, i32
     );
 
     IMPL_OP(
-        TYPE_INT, /, TYPE_INT,
-        TYPE_INT, i32, i32, i32
+        TYPE_INT, '/', TYPE_INT,
+        TYPE_INT, i32, i32, /, i32
     );
 
     IMPL_OP(
-        TYPE_INT, <, TYPE_INT,
-        TYPE_INT, i32, i32, i32
+        TYPE_INT, '%', TYPE_INT,
+        TYPE_INT, i32, i32, %, i32
     );
 
     IMPL_OP(
-        TYPE_INT, >, TYPE_INT,
-        TYPE_INT, i32, i32, i32
+        TYPE_INT, '<', TYPE_INT,
+        TYPE_INT, i32, i32, <, i32
+    );
+
+    IMPL_OP(
+        TYPE_INT, '>', TYPE_INT,
+        TYPE_INT, i32, i32, >, i32
+    );
+
+    // operators between 2 floats
+    IMPL_OP(
+        TYPE_FLOAT, '+', TYPE_FLOAT,
+        TYPE_FLOAT, f32, f32, +, f32
+    );
+
+    IMPL_OP(
+        TYPE_FLOAT, '-', TYPE_FLOAT,
+        TYPE_FLOAT, f32, f32, -, f32
+    );
+
+    IMPL_OP(
+        TYPE_FLOAT, '*', TYPE_FLOAT,
+        TYPE_FLOAT, f32, f32, *, f32
+    );
+
+    IMPL_OP(
+        TYPE_FLOAT, '/', TYPE_FLOAT,
+        TYPE_FLOAT, f32, f32, /, f32
+    );
+
+    MATCH_OP(TYPE_FLOAT, '%', TYPE_FLOAT)
+    {
+        out->type = TYPE_FLOAT;
+        out->f32 = fmod(lhs->f32, rhs->f32);
+        return; 
+    }
+
+    IMPL_OP(
+        TYPE_FLOAT, '<', TYPE_FLOAT,
+        TYPE_INT, i32, f32, <, f32
+    );
+
+    IMPL_OP(
+        TYPE_FLOAT, '>', TYPE_FLOAT,
+        TYPE_INT, i32, f32, >, f32
+    );
+
+    // operators between float and int
+    IMPL_OP(
+        TYPE_FLOAT, '+', TYPE_INT,
+        TYPE_FLOAT, f32, f32, +, i32
+    );
+
+    IMPL_OP(
+        TYPE_FLOAT, '-', TYPE_INT,
+        TYPE_FLOAT, f32, f32, -, i32
+    );
+
+    IMPL_OP(
+        TYPE_FLOAT, '*', TYPE_INT,
+        TYPE_FLOAT, f32, f32, *, i32
+    );
+
+    IMPL_OP(
+        TYPE_FLOAT, '/', TYPE_INT,
+        TYPE_FLOAT, f32, f32, /, i32
+    );
+
+    MATCH_OP(TYPE_FLOAT, '%', TYPE_INT)
+    {
+        out->type = TYPE_FLOAT;
+        out->f32 = fmod(lhs->f32, rhs->i32);
+        return; 
+    }
+
+    IMPL_OP(
+        TYPE_FLOAT, '<', TYPE_INT,
+        TYPE_INT, i32, f32, <, i32
+    );
+
+    IMPL_OP(
+        TYPE_FLOAT, '>', TYPE_INT,
+        TYPE_INT, i32, f32, >, i32
+    );
+
+    // operators between int and float
+    IMPL_OP(
+        TYPE_INT, '+', TYPE_FLOAT,
+        TYPE_FLOAT, f32, i32, +, f32
+    );
+
+    IMPL_OP(
+        TYPE_INT, '-', TYPE_FLOAT,
+        TYPE_FLOAT, f32, i32, -, f32
+    );
+
+    IMPL_OP(
+        TYPE_INT, '*', TYPE_FLOAT,
+        TYPE_FLOAT, f32, i32, *, f32
+    );
+
+    IMPL_OP(
+        TYPE_INT, '/', TYPE_FLOAT,
+        TYPE_FLOAT, f32, i32, /, f32
+    );
+
+    MATCH_OP(TYPE_INT, '%', TYPE_FLOAT)
+    {
+        out->type = TYPE_FLOAT;
+        out->f32 = fmod(lhs->i32, rhs->f32);
+        return; 
+    }
+
+    IMPL_OP(
+        TYPE_INT, '<', TYPE_FLOAT,
+        TYPE_INT, i32, i32, <, f32
+    );
+
+    IMPL_OP(
+        TYPE_INT, '>', TYPE_FLOAT,
+        TYPE_INT, i32, i32, >, f32
     );
 
     ERROR("(%d) unknown operator between types '%s' and '%s': %c\n",
@@ -218,6 +340,16 @@ value del_entity()
     entity* e = var.obj;
     free_members(e->mbeg);
     free(e);
+
+    value ret;
+    memset(&ret, 0, sizeof(value));
+    ret.type = TYPE_VOID;
+    return ret;
+}
+
+value print_str()
+{
+    printf("%s", get_variable(find_string("s"))->str);
 
     value ret;
     memset(&ret, 0, sizeof(value));

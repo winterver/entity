@@ -1,7 +1,9 @@
 ### TODO
 - [ ] more syntaxes. fix bugs.
-  - [ ] for statement.
+  - [ ] variadic parameter
+  - [ ] unary operator: -, ++, --
   - [ ] interface for native function registration.
+  - [ ] for statement.
   - [ ] complete arithmetic operations for more types.
 - [ ] rewrite in c++. use reflex as lexer.
 - [ ] assembly, bytecode, virtual machine.

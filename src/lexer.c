@@ -70,17 +70,33 @@ void lex() {
         }
         else if (token >= '0' && token <= '9') {        // process numbers
             // TODO: support floating point
-            token_val.integer = token - '0';
+            int integer = token - '0';
             while (*src >= '0' && *src <= '9') {
-                token_val.integer = token_val.integer * 10 + *src++ - '0';
+                integer = integer * 10 + *src++ - '0';
             }
-            token = NUM;
-            return;
+
+            if (*src != '.')
+            {
+                token = NUM;
+                token_val.integer = integer;
+                return;
+            }
+            else
+            {
+                src++; // skip '.'
+                float floating = (token - '0')/10;
+                while (*src >= '0' && *src <= '9') {
+                    floating = (floating / 10) + (*src++ - '0')/10;
+                }
+                token = FLT;
+                token_val.floating = integer + floating;
+                return;
+            }
         }
         else if (token == '\'') {               // parse char
             // TODO: support escape characters
             token_val.integer = *src++;
-            token = NUM;
+            token = CHR;
             src++;
             return;
         }
