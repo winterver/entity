@@ -450,6 +450,9 @@ void assign()
     *left = right;
 }
 
+int contflag = 0;
+int brkflag = 0;
+
 value block()
 {
     value ret;
@@ -546,19 +549,35 @@ value block()
             match(WHILE);
             match('(');
             token_struct* w = save();
+            token_struct* sob = NULL; // start of block
 
         NextWhile:
             value val = expression();
             match(')');
 
+            sob = save();
+
             if (val.i32) {
                 new_scope();
                 ret = block();
                 exit_scope();
-                
+
                 if (retflag)
                 {
                     return ret;
+                }
+                if (contflag)
+                {
+                    contflag = 0;
+                    restore(w);
+                    goto NextWhile;
+                }
+                if (brkflag)
+                {
+                    brkflag = 0;
+                    restore(sob);
+                    skip_block();
+                    continue; // parse next statment
                 }
 
                 restore(w);
@@ -581,6 +600,24 @@ value block()
             {
                 return ret;
             }
+            if (contflag)
+            {
+                contflag = 0;
+                restore(d);
+                goto NextDo;
+            }
+            if (brkflag)
+            {
+                brkflag = 0;
+                restore(d); // d is the start of block
+                skip_block();
+                // skip to the ending semicolon of do-while statement
+                while(token != ';') {
+                    next();
+                }
+                match(';');
+                continue; // parse next statment
+            }
 
             match(WHILE);
             match('(');
@@ -592,6 +629,18 @@ value block()
                 restore(d);
                 goto NextDo;
             }
+        }
+        else if (token == CONTINUE) {
+            match(CONTINUE);
+            match(';');
+            contflag = 1;
+            return ret;
+        }
+        else if (token == BREAK) {
+            match(BREAK);
+            match(';');
+            brkflag = 1;
+            return ret;
         }
         else if (token == RETURN) {
             match(RETURN);

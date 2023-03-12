@@ -9,7 +9,19 @@ int fib(int n) {
         b = a;
         a = t;
         n = n - 1;
-    } while(n-2);
+
+        if (t < 233)
+        {
+            continue;
+        }
+
+        #t = 1000;
+
+        if (t > 233)
+        {
+            break;
+        }
+    } while(1);
 
     return t;
 }

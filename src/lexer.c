@@ -51,6 +51,8 @@ void lex() {
             KEYWROD("while", WHILE);
             KEYWROD("do", DO);
             KEYWROD("for", FOR);
+            KEYWROD("continue", CONTINUE);
+            KEYWROD("break", BREAK);
             KEYWROD("return", RETURN);
 
             #undef KEYWROD
