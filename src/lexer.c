@@ -49,6 +49,8 @@ void lex() {
             KEYWROD("if", IF);
             KEYWROD("else", ELSE);
             KEYWROD("while", WHILE);
+            KEYWROD("do", DO);
+            KEYWROD("for", FOR);
             KEYWROD("return", RETURN);
 
             #undef KEYWROD

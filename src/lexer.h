@@ -4,7 +4,7 @@
 // tokens
 enum {
     TYPE = 128, ID, NUM, STR,
-    IF, ELSE, WHILE, RETURN,
+    IF, ELSE, WHILE, DO, FOR, RETURN,
     EQU, NEQ, LE, GE, OR, AND,
 };
 

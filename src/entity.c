@@ -466,6 +466,18 @@ value block()
         {
             match(';');
         }
+        // anonymous block
+        else if (token == '{')
+        {
+            new_scope();
+            ret = block();
+            exit_scope();
+            
+            if (retflag)
+            {
+                return ret;
+            }
+        }
         else if (token == TYPE)
         {
             var();
@@ -484,23 +496,6 @@ value block()
                 restore(cur);
                 assign();
                 match(';');
-            }
-        }
-        else if (token == RETURN)
-        {
-            match(RETURN);
-            if (token == ';')
-            {
-                match(';');
-                retflag = 1;
-                return ret;
-            }
-            else
-            {
-                ret = expression();
-                match(';');
-                retflag = 1;
-                return ret;
             }
         }
         else if (token == IF) {
@@ -545,6 +540,73 @@ value block()
                 else {
                     skip_block();
                 }
+            }
+        }
+        else if (token == WHILE) {
+            match(WHILE);
+            match('(');
+            token_struct* w = save();
+
+        NextWhile:
+            value val = expression();
+            match(')');
+
+            if (val.i32) {
+                new_scope();
+                ret = block();
+                exit_scope();
+                
+                if (retflag)
+                {
+                    return ret;
+                }
+
+                restore(w);
+                goto NextWhile;
+            }
+            else {
+                skip_block();
+            }
+        }
+        else if (token == DO) {
+            match(DO);
+            token_struct *d = save();
+
+        NextDo:
+            new_scope();
+            ret = block();
+            exit_scope();
+            
+            if (retflag)
+            {
+                return ret;
+            }
+
+            match(WHILE);
+            match('(');
+            value val = expression();
+            match(')');
+            match(';');
+
+            if (val.i32) {
+                restore(d);
+                goto NextDo;
+            }
+        }
+        else if (token == RETURN) {
+            match(RETURN);
+            if (token == ';')
+            {
+                match(';');
+                retflag = 1;
+                return ret;
+            }
+            else
+            {
+                ret = expression();
+                match(';');
+                retflag = 1;
+                return ret;
             }
         }
     }

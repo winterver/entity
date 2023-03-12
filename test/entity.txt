@@ -1,9 +1,17 @@
 int fib(int n) {
-    if (n < 3)
-    {
+    int a = 1, b = 1, t;
+    if (n < 3) {
         return 1;
     }
-    return fib(n-1)+fib(n-2);
+
+    do {
+        t = a + b;
+        b = a;
+        a = t;
+        n = n - 1;
+    } while(n-2);
+
+    return t;
 }
 
 int main() {
