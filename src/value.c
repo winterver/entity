@@ -1,3 +1,4 @@
+typedef struct entity entity;
 typedef struct value
 {
     int type; // data type
@@ -13,9 +14,22 @@ typedef struct value
         float f32;
         double f64;
         char *str;
-        void *obj; // entity
+        entity *obj; // entity
     };
 } value;
+
+typedef struct member
+{
+    struct member* next;
+    char* name;
+    value val;
+} member;
+
+typedef struct entity
+{
+    member* mbeg;
+    member* mend;
+} entity;
 
 // data types
 enum { 
@@ -123,4 +137,90 @@ void type_convert(value* val, int type)
         return;
     ERROR("(%d) can't convert from %s to %s\n", 
         lineno, type_name(val->type), type_name(type));
+}
+
+value* _find_member(member* m, char* name)
+{
+    if (m == NULL)
+        return NULL;
+
+    if (m->name == name)
+        return &m->val;
+    
+    return _find_member(m->next, name);
+}
+
+value* find_member(entity* e, char* name)
+{
+    return _find_member(e->mbeg, name);
+}
+
+value* get_member(entity* e, char* name)
+{
+    value* val = find_member(e, name);
+    if (val == NULL)
+        ERROR("(%d) no such member: %s\n", lineno, name);
+    return val;
+}
+
+void append_member(value var, char* name, value val)
+{
+    if (var.type != TYPE_ENTITY)
+    {
+        ERROR("(%d) can't append member to non-entity object\n", lineno);
+    }
+    entity* e = var.obj;
+    if (find_member(e, name) != NULL)
+    {
+        ERROR("(%d) member %s already exists\n", lineno, name);
+    }
+    member* m = malloc(sizeof(member));
+    m->next = NULL;
+    m->name = name;
+    m->val = val;
+    if (e->mend == NULL)
+    {
+        e->mbeg = m;
+        e->mend = m;
+    }
+    else
+    {
+        e->mend->next = m;
+        e->mend = m;
+    }
+}
+
+value new_entity()
+{
+    entity* e = malloc(sizeof(entity));
+    e->mbeg = NULL;
+    e->mend = NULL;
+
+    value ret;
+    ret.type = TYPE_ENTITY;
+    ret.obj = e;
+    return ret;
+}
+
+void free_members(member* m)
+{
+    if (m == NULL);
+        return;
+    free_members(m->next);
+    free(m);
+}
+
+value* get_variable(const char* name);
+
+value del_entity()
+{
+    value var = *get_variable(find_string("e"));
+    entity* e = var.obj;
+    free_members(e->mbeg);
+    free(e);
+
+    value ret;
+    memset(&ret, 0, sizeof(value));
+    ret.type = TYPE_VOID;
+    return ret;
 }

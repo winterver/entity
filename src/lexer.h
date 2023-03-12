@@ -31,5 +31,6 @@ void restore(token_struct* s);
 
 // string pool
 char* find_string(char* s);
+char* pool_add(char* s);
 
 #endif

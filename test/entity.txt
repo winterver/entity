@@ -9,23 +9,20 @@ int fib(int n) {
         b = a;
         a = t;
         n = n - 1;
-
-        if (t < 233)
-        {
-            continue;
-        }
-
-        #t = 1000;
-
-        if (t > 233)
-        {
-            break;
-        }
-    } while(1);
+    } while(n-2);
 
     return t;
 }
 
 int main() {
-    return fib(35);
+    entity e = new();
+    entity e.e = new();
+    entity e2 = e.e;
+    int e2.i = 35;
+
+    #del(e2.i);
+    del(e.e);
+    del(e);
+
+    return 0;
 }

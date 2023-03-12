@@ -88,7 +88,8 @@ void new_variable(char* name, value val)
     if (scope_end == NULL)
         ERROR("no scope\n");
 
-    // search in current scope
+    // search current scope
+    // use the underscored version cuz it won't search parent scope.
     if (_find_variable(scope_end->beg, name) != NULL)
     {
         //bug: lineno is not accurate if new_variable() call by user.
@@ -328,12 +329,19 @@ value* reference()
     match(ID);
     value* ref = get_variable(name);
 
-    /*
     while(token == '.')
     {
+        match('.');
+        char* member = token_val.string;
+        match(ID);
 
+        if (ref->type != TYPE_ENTITY)
+        {
+            ERROR("(%d) can't access member of non-entity object\n", lineno);
+        }
+        entity* e = ref->obj;
+        ref = get_member(e, member);
     }
-    */
 
     return ref;
 }
@@ -411,8 +419,15 @@ value call()
     // 传参结束，scope_end=neo,新scope挂到scope_beg下。
     scope_end->parent = scope_beg;
     // finally, call it!
-    restore(fun->stat);
-    ret = block();
+    if (fun->fp != NULL)
+    {
+        ret = fun->fp();
+    }   
+    else
+    {
+        restore(fun->stat);
+        ret = block();
+    }
 
     if (ret.type != fun->type)
     {
@@ -431,10 +446,11 @@ value call()
 }
 
 // block -> '{' { stat } '}'
-// stat -> var | call | assign
+// stat -> var | call | assign | append
 // var -> TYPE name { ',' name } ';'
 // call -> ID '(' ID ID { ',' ID ID } ')'
 // assign -> ref '=' expr
+// append -> TYPE ID '.' ID '=' expr ';'
 
 void var();
 void skip_block();
@@ -448,6 +464,28 @@ void assign()
         ERROR("(%d) assignment on different types\n", lineno);
     }
     *left = right;
+}
+
+void append()
+{
+    int type = token_val.type;
+    match(TYPE);
+    char* name = token_val.string;
+    match(ID);
+
+    value var = *get_variable(name);
+
+    match('.');
+
+    char* member = token_val.string;
+    match(ID);
+
+    match('=');
+    value val = expression();
+    type_convert(&val, type);
+    match(';');
+
+    append_member(var, member, val);
 }
 
 int contflag = 0;
@@ -483,7 +521,20 @@ value block()
         }
         else if (token == TYPE)
         {
-            var();
+            token_struct* cur = save();
+            match(TYPE);
+            match(ID);
+
+            if (token == '.')
+            {
+                restore(cur);
+                append();
+            }
+            else
+            {
+                restore(cur);
+                var();
+            }
         }
         else if (token == ID)
         {
@@ -827,6 +878,21 @@ int main(int argc, char* argv[])
     memset(src, 0, len+1);
     fread(src, 1, len, f);
 
+    // add native function names to string pool in advance
+    pool_add("new");
+    pool_add("del");
+
+    // register native function(s)
+    new_function(TYPE_ENTITY, find_string("new"), NULL, NULL, &new_entity);
+    
+    param* p = malloc(sizeof(param));
+    p->next = NULL;
+    pool_add("e");
+    p->name = find_string("e");
+    p->type = TYPE_ENTITY;
+    new_function(TYPE_VOID, find_string("del"), p, NULL, &del_entity);
+
+    // parse
     program();
 
     value result;

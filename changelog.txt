@@ -8,3 +8,8 @@ revision 6 Release Build fib(35) test: 4.9s !!
     it got astonishing speed up!
 revision 7 Release Build fib(35) test: 4.7s
     optimized some code.
+    
+2023/3/12th
+revision 8 support while & do-while statement.
+revision 9 support continue & break statement.
+revision 10 entity object & member attachment.
