@@ -933,7 +933,7 @@ int main(int argc, char* argv[])
         ERROR("main() not found\n");
     }
 
-    printf("%f\n", result.f32);
+    printf("%d\n", result.i32);
 
     free(orig);
     return 0;

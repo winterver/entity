@@ -326,8 +326,10 @@ value new_entity()
 
 void free_members(member* m)
 {
-    if (m == NULL);
+    if (m == NULL)
+    {
         return;
+    }
     free_members(m->next);
     free(m);
 }

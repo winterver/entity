@@ -1,14 +1,20 @@
-float abs(float x)
+int fib(int n)
 {
-    if (x < 0)
+    entity e = new();
+    float e.x = 0.0;
+    float e.y = 0.0;
+    float e.z = 0.0;
+    float a = e.x*e.y*e.z;
+    del(e);
+    
+    if (n < 3)
     {
-        return 0 - x;
+        return 1;
     }
-    return x;
+    return fib(n-1) + fib(n-2);
 }
 
 int main()
 {
-    print("233\n");
-    return abs(0-1.0);
+    return fib(35);
 }

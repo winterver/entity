@@ -14,3 +14,6 @@ revision 8 support while & do-while statement.
 revision 9 support continue & break statement.
 revision 10 entity object & member attachment.
 revision 11 more arithmetics & print().
+
+2023/3/14th
+revision 12 fix memory leak.
